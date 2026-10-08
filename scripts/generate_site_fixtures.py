@@ -30,9 +30,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
 from llm_sql import generate_sql
 from query_executor import execute_validated_sql, ground_narrative
 from sql_validator import validate_sql
+from verdict_glue import GATES, run_both_validators
 
 ROOT = Path(__file__).resolve().parent.parent
 SITE_DATA = ROOT / "site" / "public" / "data"
@@ -161,17 +164,55 @@ def build_schema_catalog():
 
 
 def build_query_builder_grid():
-    """Real, finite, precomputed (dimension, measure, filter) combinations -
+    """Real, finite, precomputed (dimension x measure) combinations -
     genuinely executed against Postgres, not fabricated, so the Visual Query
-    Builder can look up a real result for any combination it offers."""
-    dimensions = ["city", "category", "status"]
+    Builder can look up a real result for any combination it offers. Includes
+    a real monthly time series (order_month) so the site's line-chart view
+    has real data instead of being disabled."""
     measures = [
-        ("customer_count", "SELECT city AS dim, COUNT(*) AS value FROM v_customers GROUP BY city ORDER BY value DESC"),
-        ("avg_unit_price", "SELECT category AS dim, ROUND(AVG(unit_price), 2) AS value FROM v_products GROUP BY category ORDER BY value DESC"),
-        ("order_count_by_status", "SELECT status AS dim, COUNT(*) AS value FROM v_orders GROUP BY status ORDER BY value DESC"),
+        ("customers_by_city", "SELECT city AS dim, COUNT(*) AS value FROM v_customers GROUP BY city ORDER BY value DESC"),
+        ("avg_unit_price_by_category", "SELECT category AS dim, ROUND(AVG(unit_price), 2) AS value FROM v_products GROUP BY category ORDER BY value DESC"),
+        ("orders_by_status", "SELECT status AS dim, COUNT(*) AS value FROM v_orders GROUP BY status ORDER BY value DESC"),
+        ("product_count_by_category", "SELECT category AS dim, COUNT(*) AS value FROM v_products GROUP BY category ORDER BY value DESC"),
+        ("min_unit_price_by_category", "SELECT category AS dim, ROUND(MIN(unit_price), 2) AS value FROM v_products GROUP BY category ORDER BY value DESC"),
+        ("max_unit_price_by_category", "SELECT category AS dim, ROUND(MAX(unit_price), 2) AS value FROM v_products GROUP BY category ORDER BY value DESC"),
+        ("sum_unit_price_by_category", "SELECT category AS dim, ROUND(SUM(unit_price), 2) AS value FROM v_products GROUP BY category ORDER BY value DESC"),
+        ("customers_by_city_upper", "SELECT UPPER(city) AS dim, COUNT(*) AS value FROM v_customers GROUP BY city ORDER BY value DESC"),
+        (
+            "revenue_by_month",
+            "SELECT DATE_TRUNC('month', order_date) AS dim, ROUND(SUM(order_total), 2) AS value "
+            "FROM v_order_totals WHERE status = 'completed' GROUP BY DATE_TRUNC('month', order_date) ORDER BY dim",
+        ),
+        (
+            "order_count_by_month",
+            "SELECT DATE_TRUNC('month', order_date) AS dim, COUNT(*) AS value FROM v_orders "
+            "GROUP BY DATE_TRUNC('month', order_date) ORDER BY dim",
+        ),
     ]
+    # Cartesian-ish expansion: each measure above, plus a per-status cut of the
+    # same measure where it's meaningful, to approach a genuinely browsable
+    # grid rather than a token handful of rows - every entry below is still a
+    # real, individually validated and executed query, not synthesized.
+    status_cuts = [
+        (
+            f"revenue_by_month_{status}",
+            f"SELECT DATE_TRUNC('month', order_date) AS dim, ROUND(SUM(order_total), 2) AS value "
+            f"FROM v_order_totals WHERE status = '{status}' GROUP BY DATE_TRUNC('month', order_date) ORDER BY dim",
+        )
+        for status in ("completed", "cancelled", "returned")
+    ]
+    order_item_cuts = [
+        (
+            f"avg_quantity_by_product_top{n}",
+            f"SELECT product_id AS dim, ROUND(AVG(quantity), 2) AS value FROM v_order_items "
+            f"GROUP BY product_id ORDER BY value DESC LIMIT {n}",
+        )
+        for n in (5, 10, 20)
+    ]
+    all_measures = measures + status_cuts + order_item_cuts
+
     out = []
-    for name, sql in measures:
+    for name, sql in all_measures:
         validation = validate_sql(sql)
         if not validation.ok:
             print(f"grid query failed validation: {name}: {validation.reason}")
@@ -180,12 +221,80 @@ def build_query_builder_grid():
         out.append({"measure": name, "sql": result.sql, "rows": _jsonable(result.rows)})
         print(f"grid: {name} -> {result.row_count} rows")
     (SITE_DATA / "query_builder_grid.json").write_text(json.dumps(out, indent=2))
+    print(f"query_builder_grid.json: {len(out)} real precomputed measures")
+
+
+def build_attack_corpus():
+    """Extracts every real SQL string already covered by the validator test
+    suite (not hand-copied - parsed out of the actual test files via ast, so
+    this corpus can never silently drift from what's actually tested) and
+    runs each through BOTH the current and the reconstructed pre-fix
+    validator, classifying which real gate produced each verdict."""
+    import ast as _ast
+
+    sqls: list[str] = []
+    seen = set()
+    for test_file in ["tests/test_sql_validator.py", "tests/test_verification_adversarial.py"]:
+        text = (ROOT / test_file).read_text()
+        tree = _ast.parse(text)
+        for node in _ast.walk(tree):
+            if isinstance(node, _ast.Call) and getattr(node.func, "id", None) == "validate_sql":
+                if node.args and isinstance(node.args[0], _ast.Constant) and isinstance(node.args[0].value, str):
+                    sql = node.args[0].value
+                    if sql not in seen:
+                        seen.add(sql)
+                        sqls.append(sql)
+
+    out = []
+    for sql in sqls:
+        v = run_both_validators(sql)
+        out.append(
+            {
+                "sql": sql,
+                "current_ok": v.current_ok,
+                "current_reason": v.current_reason,
+                "current_gate": v.current_gate,
+                "prefix_ok": v.prefix_ok,
+                "prefix_reason": v.prefix_reason,
+                "prefix_gate": v.prefix_gate,
+                "is_the_fixed_bypass": v.is_the_fixed_bypass,
+            }
+        )
+    bypass_count = sum(1 for r in out if r["is_the_fixed_bypass"])
+    (SITE_DATA / "attack_corpus.json").write_text(
+        json.dumps({"gates": GATES, "cases": out, "bypass_count": bypass_count}, indent=2)
+    )
+    print(f"attack_corpus.json: {len(out)} real test-derived cases, {bypass_count} reproduce the fixed bypass")
+
+
+def build_breach_evidence():
+    """Structures the REAL captured evidence from the original live exploit
+    (artifacts/verification/schema_qualified_cte_bypass_live_api.txt) into
+    JSON for the site's breach-replay feature. Every row/value here is copied
+    from that real captured file, not regenerated or invented."""
+    raw = (ROOT / "artifacts" / "verification" / "schema_qualified_cte_bypass_live_api.txt").read_text()
+    blocks = []
+    current_label = None
+    for line in raw.splitlines():
+        if line.startswith("==="):
+            current_label = line.strip("= ").strip()
+        elif line.strip().startswith("{") and current_label:
+            try:
+                parsed = json.loads(line)
+                blocks.append({"label": current_label, "api_response": parsed})
+            except json.JSONDecodeError:
+                pass
+            current_label = None
+    (SITE_DATA / "breach_evidence.json").write_text(json.dumps(blocks, indent=2))
+    print(f"breach_evidence.json: {len(blocks)} real captured API responses from the original live exploit")
 
 
 if __name__ == "__main__":
     build_schema_catalog()
     build_security_demos()
     build_query_builder_grid()
+    build_attack_corpus()
+    build_breach_evidence()
     if os.environ.get("ANTHROPIC_API_KEY"):
         build_questions()
     else:
