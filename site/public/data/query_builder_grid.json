@@ -1,0 +1,80 @@
+[
+  {
+    "measure": "customer_count",
+    "sql": "SELECT city AS dim, COUNT(*) AS value FROM v_customers GROUP BY city ORDER BY value DESC",
+    "rows": [
+      {
+        "dim": "Austin",
+        "value": 45
+      },
+      {
+        "dim": "Chicago",
+        "value": 43
+      },
+      {
+        "dim": "Boston",
+        "value": 42
+      },
+      {
+        "dim": "Tampa",
+        "value": 40
+      },
+      {
+        "dim": "Orlando",
+        "value": 40
+      },
+      {
+        "dim": "Seattle",
+        "value": 33
+      },
+      {
+        "dim": "Miami",
+        "value": 31
+      },
+      {
+        "dim": "Denver",
+        "value": 26
+      }
+    ]
+  },
+  {
+    "measure": "avg_unit_price",
+    "sql": "SELECT category AS dim, ROUND(CAST(AVG(unit_price) AS DECIMAL), 2) AS value FROM v_products GROUP BY category ORDER BY value DESC",
+    "rows": [
+      {
+        "dim": "Outdoors",
+        "value": 98.79
+      },
+      {
+        "dim": "Office",
+        "value": 81.36
+      },
+      {
+        "dim": "Electronics",
+        "value": 67.16
+      },
+      {
+        "dim": "Home",
+        "value": 66.11
+      }
+    ]
+  },
+  {
+    "measure": "order_count_by_status",
+    "sql": "SELECT status AS dim, COUNT(*) AS value FROM v_orders GROUP BY status ORDER BY value DESC",
+    "rows": [
+      {
+        "dim": "completed",
+        "value": 1034
+      },
+      {
+        "dim": "cancelled",
+        "value": 90
+      },
+      {
+        "dim": "returned",
+        "value": 76
+      }
+    ]
+  }
+]
