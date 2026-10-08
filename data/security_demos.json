@@ -1,0 +1,92 @@
+[
+  {
+    "label": "Approved SELECT",
+    "sql": "SELECT city, COUNT(*) AS customer_count FROM v_customers GROUP BY city ORDER BY customer_count DESC",
+    "validator_result": "accepted",
+    "reason": "",
+    "row_count": 8,
+    "rows": [
+      {
+        "city": "Austin",
+        "customer_count": 45
+      },
+      {
+        "city": "Chicago",
+        "customer_count": 43
+      },
+      {
+        "city": "Boston",
+        "customer_count": 42
+      },
+      {
+        "city": "Tampa",
+        "customer_count": 40
+      },
+      {
+        "city": "Orlando",
+        "customer_count": 40
+      },
+      {
+        "city": "Seattle",
+        "customer_count": 33
+      },
+      {
+        "city": "Miami",
+        "customer_count": 31
+      },
+      {
+        "city": "Denver",
+        "customer_count": 26
+      }
+    ],
+    "columns": [
+      "city",
+      "customer_count"
+    ]
+  },
+  {
+    "label": "Rejected DELETE",
+    "sql": "DELETE FROM v_customers WHERE customer_id = 1",
+    "validator_result": "rejected",
+    "reason": "only SELECT/CTE statements are allowed, got Delete",
+    "row_count": 0,
+    "rows": [],
+    "columns": []
+  },
+  {
+    "label": "Rejected DROP",
+    "sql": "DROP TABLE customers",
+    "validator_result": "rejected",
+    "reason": "only SELECT/CTE statements are allowed, got Drop",
+    "row_count": 0,
+    "rows": [],
+    "columns": []
+  },
+  {
+    "label": "Invalid table reference",
+    "sql": "SELECT * FROM customers",
+    "validator_result": "rejected",
+    "reason": "unapproved table/view referenced: customers",
+    "row_count": 0,
+    "rows": [],
+    "columns": []
+  },
+  {
+    "label": "Multi-statement injection",
+    "sql": "SELECT * FROM v_customers; DROP TABLE customers;",
+    "validator_result": "rejected",
+    "reason": "expected exactly 1 statement, got 2 (multi-statement rejected)",
+    "row_count": 0,
+    "rows": [],
+    "columns": []
+  },
+  {
+    "label": "Unauthorized schema access (catalog-leak attempt)",
+    "sql": "WITH pg_roles AS (SELECT 1 AS x FROM v_customers) SELECT rolname, rolsuper FROM pg_catalog.pg_roles",
+    "validator_result": "rejected",
+    "reason": "unapproved table/view referenced: pg_roles",
+    "row_count": 0,
+    "rows": [],
+    "columns": []
+  }
+]

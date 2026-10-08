@@ -1,0 +1,10 @@
+{
+  "sql_validator.py": {
+    "sha256": "f014977c61444811b046b652bea7ee9e6764ab70635d0212d3d06f793fffc50d",
+    "bytes": 11420
+  },
+  "sql_validator_prefix_historical.py": {
+    "sha256": "58ee385bbe17b6d02361936e253984a11e0a51fb7994c7484116c85f96f220d7",
+    "bytes": 12564
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "approved_views": [
+    "v_customers",
+    "v_order_items",
+    "v_order_totals",
+    "v_orders",
+    "v_products"
+  ],
+  "catalog_text": "\nApproved read-only views (the ONLY objects you may query), PostgreSQL 17:\n\nv_customers(customer_id, first_name, last_name, city, signup_date DATE)\nv_products(product_id, name, category, unit_price NUMERIC)\nv_orders(order_id, customer_id, order_date DATE, status)   -- status in ('completed','cancelled','returned')\nv_order_items(order_item_id, order_id, product_id, quantity, unit_price NUMERIC)\nv_order_totals(order_id, customer_id, order_date, status, order_total NUMERIC)  -- order_total = SUM(quantity*unit_price)\n\nJoin keys: v_orders.customer_id -> v_customers.customer_id;\nv_order_items.order_id -> v_orders.order_id; v_order_items.product_id -> v_products.product_id.\n"
+}

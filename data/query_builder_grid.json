@@ -1,0 +1,834 @@
+[
+  {
+    "measure": "customers_by_city",
+    "sql": "SELECT city AS dim, COUNT(*) AS value FROM v_customers GROUP BY city ORDER BY value DESC",
+    "rows": [
+      {
+        "dim": "Austin",
+        "value": 45
+      },
+      {
+        "dim": "Chicago",
+        "value": 43
+      },
+      {
+        "dim": "Boston",
+        "value": 42
+      },
+      {
+        "dim": "Tampa",
+        "value": 40
+      },
+      {
+        "dim": "Orlando",
+        "value": 40
+      },
+      {
+        "dim": "Seattle",
+        "value": 33
+      },
+      {
+        "dim": "Miami",
+        "value": 31
+      },
+      {
+        "dim": "Denver",
+        "value": 26
+      }
+    ]
+  },
+  {
+    "measure": "avg_unit_price_by_category",
+    "sql": "SELECT category AS dim, ROUND(CAST(AVG(unit_price) AS DECIMAL), 2) AS value FROM v_products GROUP BY category ORDER BY value DESC",
+    "rows": [
+      {
+        "dim": "Outdoors",
+        "value": 98.79
+      },
+      {
+        "dim": "Office",
+        "value": 81.36
+      },
+      {
+        "dim": "Electronics",
+        "value": 67.16
+      },
+      {
+        "dim": "Home",
+        "value": 66.11
+      }
+    ]
+  },
+  {
+    "measure": "orders_by_status",
+    "sql": "SELECT status AS dim, COUNT(*) AS value FROM v_orders GROUP BY status ORDER BY value DESC",
+    "rows": [
+      {
+        "dim": "completed",
+        "value": 1034
+      },
+      {
+        "dim": "cancelled",
+        "value": 90
+      },
+      {
+        "dim": "returned",
+        "value": 76
+      }
+    ]
+  },
+  {
+    "measure": "product_count_by_category",
+    "sql": "SELECT category AS dim, COUNT(*) AS value FROM v_products GROUP BY category ORDER BY value DESC",
+    "rows": [
+      {
+        "dim": "Electronics",
+        "value": 5
+      },
+      {
+        "dim": "Home",
+        "value": 5
+      },
+      {
+        "dim": "Office",
+        "value": 5
+      },
+      {
+        "dim": "Outdoors",
+        "value": 5
+      }
+    ]
+  },
+  {
+    "measure": "min_unit_price_by_category",
+    "sql": "SELECT category AS dim, ROUND(MIN(unit_price), 2) AS value FROM v_products GROUP BY category ORDER BY value DESC",
+    "rows": [
+      {
+        "dim": "Office",
+        "value": 41.57
+      },
+      {
+        "dim": "Outdoors",
+        "value": 37.06
+      },
+      {
+        "dim": "Home",
+        "value": 20.89
+      },
+      {
+        "dim": "Electronics",
+        "value": 8.75
+      }
+    ]
+  },
+  {
+    "measure": "max_unit_price_by_category",
+    "sql": "SELECT category AS dim, ROUND(MAX(unit_price), 2) AS value FROM v_products GROUP BY category ORDER BY value DESC",
+    "rows": [
+      {
+        "dim": "Home",
+        "value": 133.43
+      },
+      {
+        "dim": "Office",
+        "value": 125.79
+      },
+      {
+        "dim": "Outdoors",
+        "value": 122.59
+      },
+      {
+        "dim": "Electronics",
+        "value": 118.72
+      }
+    ]
+  },
+  {
+    "measure": "sum_unit_price_by_category",
+    "sql": "SELECT category AS dim, ROUND(SUM(unit_price), 2) AS value FROM v_products GROUP BY category ORDER BY value DESC",
+    "rows": [
+      {
+        "dim": "Outdoors",
+        "value": 493.97
+      },
+      {
+        "dim": "Office",
+        "value": 406.79
+      },
+      {
+        "dim": "Electronics",
+        "value": 335.8
+      },
+      {
+        "dim": "Home",
+        "value": 330.56
+      }
+    ]
+  },
+  {
+    "measure": "customers_by_city_upper",
+    "sql": "SELECT UPPER(city) AS dim, COUNT(*) AS value FROM v_customers GROUP BY city ORDER BY value DESC",
+    "rows": [
+      {
+        "dim": "AUSTIN",
+        "value": 45
+      },
+      {
+        "dim": "CHICAGO",
+        "value": 43
+      },
+      {
+        "dim": "BOSTON",
+        "value": 42
+      },
+      {
+        "dim": "TAMPA",
+        "value": 40
+      },
+      {
+        "dim": "ORLANDO",
+        "value": 40
+      },
+      {
+        "dim": "SEATTLE",
+        "value": 33
+      },
+      {
+        "dim": "MIAMI",
+        "value": 31
+      },
+      {
+        "dim": "DENVER",
+        "value": 26
+      }
+    ]
+  },
+  {
+    "measure": "revenue_by_month",
+    "sql": "SELECT DATE_TRUNC('MONTH', order_date) AS dim, ROUND(SUM(order_total), 2) AS value FROM v_order_totals WHERE status = 'completed' GROUP BY DATE_TRUNC('MONTH', order_date) ORDER BY dim",
+    "rows": [
+      {
+        "dim": "2025-01-01T00:00:00+00:00",
+        "value": 18943.01
+      },
+      {
+        "dim": "2025-02-01T00:00:00+00:00",
+        "value": 19640.76
+      },
+      {
+        "dim": "2025-03-01T00:00:00+00:00",
+        "value": 16796.27
+      },
+      {
+        "dim": "2025-04-01T00:00:00+00:00",
+        "value": 19331.03
+      },
+      {
+        "dim": "2025-05-01T00:00:00+00:00",
+        "value": 20109.2
+      },
+      {
+        "dim": "2025-06-01T00:00:00+00:00",
+        "value": 13928.79
+      },
+      {
+        "dim": "2025-07-01T00:00:00+00:00",
+        "value": 17573.09
+      },
+      {
+        "dim": "2025-08-01T00:00:00+00:00",
+        "value": 14862.78
+      },
+      {
+        "dim": "2025-09-01T00:00:00+00:00",
+        "value": 19914.11
+      },
+      {
+        "dim": "2025-10-01T00:00:00+00:00",
+        "value": 18664.45
+      },
+      {
+        "dim": "2025-11-01T00:00:00+00:00",
+        "value": 15923.99
+      },
+      {
+        "dim": "2025-12-01T00:00:00+00:00",
+        "value": 14971.32
+      },
+      {
+        "dim": "2026-01-01T00:00:00+00:00",
+        "value": 16216.16
+      },
+      {
+        "dim": "2026-02-01T00:00:00+00:00",
+        "value": 20723.57
+      },
+      {
+        "dim": "2026-03-01T00:00:00+00:00",
+        "value": 21019.7
+      },
+      {
+        "dim": "2026-04-01T00:00:00+00:00",
+        "value": 15384.87
+      },
+      {
+        "dim": "2026-05-01T00:00:00+00:00",
+        "value": 15385.27
+      },
+      {
+        "dim": "2026-06-01T00:00:00+00:00",
+        "value": 20317.0
+      },
+      {
+        "dim": "2026-07-01T00:00:00+00:00",
+        "value": 22384.76
+      },
+      {
+        "dim": "2026-08-01T00:00:00+00:00",
+        "value": 22629.61
+      },
+      {
+        "dim": "2026-09-01T00:00:00+00:00",
+        "value": 14335.7
+      },
+      {
+        "dim": "2026-10-01T00:00:00+00:00",
+        "value": 9261.44
+      }
+    ]
+  },
+  {
+    "measure": "order_count_by_month",
+    "sql": "SELECT DATE_TRUNC('MONTH', order_date) AS dim, COUNT(*) AS value FROM v_orders GROUP BY DATE_TRUNC('MONTH', order_date) ORDER BY dim",
+    "rows": [
+      {
+        "dim": "2025-01-01T00:00:00+00:00",
+        "value": 65
+      },
+      {
+        "dim": "2025-02-01T00:00:00+00:00",
+        "value": 55
+      },
+      {
+        "dim": "2025-03-01T00:00:00+00:00",
+        "value": 54
+      },
+      {
+        "dim": "2025-04-01T00:00:00+00:00",
+        "value": 59
+      },
+      {
+        "dim": "2025-05-01T00:00:00+00:00",
+        "value": 62
+      },
+      {
+        "dim": "2025-06-01T00:00:00+00:00",
+        "value": 51
+      },
+      {
+        "dim": "2025-07-01T00:00:00+00:00",
+        "value": 60
+      },
+      {
+        "dim": "2025-08-01T00:00:00+00:00",
+        "value": 54
+      },
+      {
+        "dim": "2025-09-01T00:00:00+00:00",
+        "value": 63
+      },
+      {
+        "dim": "2025-10-01T00:00:00+00:00",
+        "value": 59
+      },
+      {
+        "dim": "2025-11-01T00:00:00+00:00",
+        "value": 50
+      },
+      {
+        "dim": "2025-12-01T00:00:00+00:00",
+        "value": 42
+      },
+      {
+        "dim": "2026-01-01T00:00:00+00:00",
+        "value": 56
+      },
+      {
+        "dim": "2026-02-01T00:00:00+00:00",
+        "value": 54
+      },
+      {
+        "dim": "2026-03-01T00:00:00+00:00",
+        "value": 55
+      },
+      {
+        "dim": "2026-04-01T00:00:00+00:00",
+        "value": 59
+      },
+      {
+        "dim": "2026-05-01T00:00:00+00:00",
+        "value": 54
+      },
+      {
+        "dim": "2026-06-01T00:00:00+00:00",
+        "value": 59
+      },
+      {
+        "dim": "2026-07-01T00:00:00+00:00",
+        "value": 61
+      },
+      {
+        "dim": "2026-08-01T00:00:00+00:00",
+        "value": 57
+      },
+      {
+        "dim": "2026-09-01T00:00:00+00:00",
+        "value": 44
+      },
+      {
+        "dim": "2026-10-01T00:00:00+00:00",
+        "value": 27
+      }
+    ]
+  },
+  {
+    "measure": "revenue_by_month_completed",
+    "sql": "SELECT DATE_TRUNC('MONTH', order_date) AS dim, ROUND(SUM(order_total), 2) AS value FROM v_order_totals WHERE status = 'completed' GROUP BY DATE_TRUNC('MONTH', order_date) ORDER BY dim",
+    "rows": [
+      {
+        "dim": "2025-01-01T00:00:00+00:00",
+        "value": 18943.01
+      },
+      {
+        "dim": "2025-02-01T00:00:00+00:00",
+        "value": 19640.76
+      },
+      {
+        "dim": "2025-03-01T00:00:00+00:00",
+        "value": 16796.27
+      },
+      {
+        "dim": "2025-04-01T00:00:00+00:00",
+        "value": 19331.03
+      },
+      {
+        "dim": "2025-05-01T00:00:00+00:00",
+        "value": 20109.2
+      },
+      {
+        "dim": "2025-06-01T00:00:00+00:00",
+        "value": 13928.79
+      },
+      {
+        "dim": "2025-07-01T00:00:00+00:00",
+        "value": 17573.09
+      },
+      {
+        "dim": "2025-08-01T00:00:00+00:00",
+        "value": 14862.78
+      },
+      {
+        "dim": "2025-09-01T00:00:00+00:00",
+        "value": 19914.11
+      },
+      {
+        "dim": "2025-10-01T00:00:00+00:00",
+        "value": 18664.45
+      },
+      {
+        "dim": "2025-11-01T00:00:00+00:00",
+        "value": 15923.99
+      },
+      {
+        "dim": "2025-12-01T00:00:00+00:00",
+        "value": 14971.32
+      },
+      {
+        "dim": "2026-01-01T00:00:00+00:00",
+        "value": 16216.16
+      },
+      {
+        "dim": "2026-02-01T00:00:00+00:00",
+        "value": 20723.57
+      },
+      {
+        "dim": "2026-03-01T00:00:00+00:00",
+        "value": 21019.7
+      },
+      {
+        "dim": "2026-04-01T00:00:00+00:00",
+        "value": 15384.87
+      },
+      {
+        "dim": "2026-05-01T00:00:00+00:00",
+        "value": 15385.27
+      },
+      {
+        "dim": "2026-06-01T00:00:00+00:00",
+        "value": 20317.0
+      },
+      {
+        "dim": "2026-07-01T00:00:00+00:00",
+        "value": 22384.76
+      },
+      {
+        "dim": "2026-08-01T00:00:00+00:00",
+        "value": 22629.61
+      },
+      {
+        "dim": "2026-09-01T00:00:00+00:00",
+        "value": 14335.7
+      },
+      {
+        "dim": "2026-10-01T00:00:00+00:00",
+        "value": 9261.44
+      }
+    ]
+  },
+  {
+    "measure": "revenue_by_month_cancelled",
+    "sql": "SELECT DATE_TRUNC('MONTH', order_date) AS dim, ROUND(SUM(order_total), 2) AS value FROM v_order_totals WHERE status = 'cancelled' GROUP BY DATE_TRUNC('MONTH', order_date) ORDER BY dim",
+    "rows": [
+      {
+        "dim": "2025-01-01T00:00:00+00:00",
+        "value": 2143.1
+      },
+      {
+        "dim": "2025-02-01T00:00:00+00:00",
+        "value": 1898.62
+      },
+      {
+        "dim": "2025-03-01T00:00:00+00:00",
+        "value": 2877.91
+      },
+      {
+        "dim": "2025-04-01T00:00:00+00:00",
+        "value": 1225.78
+      },
+      {
+        "dim": "2025-05-01T00:00:00+00:00",
+        "value": 878.97
+      },
+      {
+        "dim": "2025-06-01T00:00:00+00:00",
+        "value": 1482.4
+      },
+      {
+        "dim": "2025-07-01T00:00:00+00:00",
+        "value": 1907.1
+      },
+      {
+        "dim": "2025-08-01T00:00:00+00:00",
+        "value": 1931.74
+      },
+      {
+        "dim": "2025-09-01T00:00:00+00:00",
+        "value": 1867.74
+      },
+      {
+        "dim": "2025-10-01T00:00:00+00:00",
+        "value": 4065.31
+      },
+      {
+        "dim": "2025-11-01T00:00:00+00:00",
+        "value": 1012.4
+      },
+      {
+        "dim": "2025-12-01T00:00:00+00:00",
+        "value": 678.37
+      },
+      {
+        "dim": "2026-01-01T00:00:00+00:00",
+        "value": 1130.98
+      },
+      {
+        "dim": "2026-02-01T00:00:00+00:00",
+        "value": 2044.76
+      },
+      {
+        "dim": "2026-03-01T00:00:00+00:00",
+        "value": 1486.4
+      },
+      {
+        "dim": "2026-04-01T00:00:00+00:00",
+        "value": 1162.17
+      },
+      {
+        "dim": "2026-05-01T00:00:00+00:00",
+        "value": 2761.67
+      },
+      {
+        "dim": "2026-06-01T00:00:00+00:00",
+        "value": 1953.26
+      },
+      {
+        "dim": "2026-07-01T00:00:00+00:00",
+        "value": 605.09
+      },
+      {
+        "dim": "2026-08-01T00:00:00+00:00",
+        "value": 1357.07
+      },
+      {
+        "dim": "2026-09-01T00:00:00+00:00",
+        "value": 1677.0
+      },
+      {
+        "dim": "2026-10-01T00:00:00+00:00",
+        "value": 282.15
+      }
+    ]
+  },
+  {
+    "measure": "revenue_by_month_returned",
+    "sql": "SELECT DATE_TRUNC('MONTH', order_date) AS dim, ROUND(SUM(order_total), 2) AS value FROM v_order_totals WHERE status = 'returned' GROUP BY DATE_TRUNC('MONTH', order_date) ORDER BY dim",
+    "rows": [
+      {
+        "dim": "2025-01-01T00:00:00+00:00",
+        "value": 1191.2
+      },
+      {
+        "dim": "2025-02-01T00:00:00+00:00",
+        "value": 1129.09
+      },
+      {
+        "dim": "2025-03-01T00:00:00+00:00",
+        "value": 658.49
+      },
+      {
+        "dim": "2025-04-01T00:00:00+00:00",
+        "value": 1977.73
+      },
+      {
+        "dim": "2025-05-01T00:00:00+00:00",
+        "value": 1559.68
+      },
+      {
+        "dim": "2025-06-01T00:00:00+00:00",
+        "value": 1073.92
+      },
+      {
+        "dim": "2025-07-01T00:00:00+00:00",
+        "value": 2511.31
+      },
+      {
+        "dim": "2025-08-01T00:00:00+00:00",
+        "value": 1371.06
+      },
+      {
+        "dim": "2025-09-01T00:00:00+00:00",
+        "value": 436.53
+      },
+      {
+        "dim": "2025-10-01T00:00:00+00:00",
+        "value": 563.37
+      },
+      {
+        "dim": "2025-11-01T00:00:00+00:00",
+        "value": 1737.56
+      },
+      {
+        "dim": "2025-12-01T00:00:00+00:00",
+        "value": 1441.5
+      },
+      {
+        "dim": "2026-01-01T00:00:00+00:00",
+        "value": 1347.51
+      },
+      {
+        "dim": "2026-02-01T00:00:00+00:00",
+        "value": 1059.43
+      },
+      {
+        "dim": "2026-03-01T00:00:00+00:00",
+        "value": 1545.49
+      },
+      {
+        "dim": "2026-04-01T00:00:00+00:00",
+        "value": 2701.84
+      },
+      {
+        "dim": "2026-05-01T00:00:00+00:00",
+        "value": 2733.96
+      },
+      {
+        "dim": "2026-06-01T00:00:00+00:00",
+        "value": 854.84
+      },
+      {
+        "dim": "2026-07-01T00:00:00+00:00",
+        "value": 1922.63
+      },
+      {
+        "dim": "2026-08-01T00:00:00+00:00",
+        "value": 386.12
+      },
+      {
+        "dim": "2026-09-01T00:00:00+00:00",
+        "value": 1222.79
+      },
+      {
+        "dim": "2026-10-01T00:00:00+00:00",
+        "value": 1470.31
+      }
+    ]
+  },
+  {
+    "measure": "avg_quantity_by_product_top5",
+    "sql": "SELECT product_id AS dim, ROUND(CAST(AVG(quantity) AS DECIMAL), 2) AS value FROM v_order_items GROUP BY product_id ORDER BY value DESC LIMIT 5",
+    "rows": [
+      {
+        "dim": 2,
+        "value": 2.16
+      },
+      {
+        "dim": 7,
+        "value": 2.12
+      },
+      {
+        "dim": 3,
+        "value": 2.07
+      },
+      {
+        "dim": 13,
+        "value": 2.06
+      },
+      {
+        "dim": 18,
+        "value": 2.06
+      }
+    ]
+  },
+  {
+    "measure": "avg_quantity_by_product_top10",
+    "sql": "SELECT product_id AS dim, ROUND(CAST(AVG(quantity) AS DECIMAL), 2) AS value FROM v_order_items GROUP BY product_id ORDER BY value DESC LIMIT 10",
+    "rows": [
+      {
+        "dim": 2,
+        "value": 2.16
+      },
+      {
+        "dim": 7,
+        "value": 2.12
+      },
+      {
+        "dim": 3,
+        "value": 2.07
+      },
+      {
+        "dim": 13,
+        "value": 2.06
+      },
+      {
+        "dim": 18,
+        "value": 2.06
+      },
+      {
+        "dim": 5,
+        "value": 2.05
+      },
+      {
+        "dim": 15,
+        "value": 2.05
+      },
+      {
+        "dim": 14,
+        "value": 2.02
+      },
+      {
+        "dim": 12,
+        "value": 2.0
+      },
+      {
+        "dim": 10,
+        "value": 1.99
+      }
+    ]
+  },
+  {
+    "measure": "avg_quantity_by_product_top20",
+    "sql": "SELECT product_id AS dim, ROUND(CAST(AVG(quantity) AS DECIMAL), 2) AS value FROM v_order_items GROUP BY product_id ORDER BY value DESC LIMIT 20",
+    "rows": [
+      {
+        "dim": 2,
+        "value": 2.16
+      },
+      {
+        "dim": 7,
+        "value": 2.12
+      },
+      {
+        "dim": 3,
+        "value": 2.07
+      },
+      {
+        "dim": 13,
+        "value": 2.06
+      },
+      {
+        "dim": 18,
+        "value": 2.06
+      },
+      {
+        "dim": 5,
+        "value": 2.05
+      },
+      {
+        "dim": 15,
+        "value": 2.05
+      },
+      {
+        "dim": 14,
+        "value": 2.02
+      },
+      {
+        "dim": 12,
+        "value": 2.0
+      },
+      {
+        "dim": 10,
+        "value": 1.99
+      },
+      {
+        "dim": 20,
+        "value": 1.99
+      },
+      {
+        "dim": 9,
+        "value": 1.98
+      },
+      {
+        "dim": 8,
+        "value": 1.98
+      },
+      {
+        "dim": 4,
+        "value": 1.94
+      },
+      {
+        "dim": 6,
+        "value": 1.94
+      },
+      {
+        "dim": 19,
+        "value": 1.93
+      },
+      {
+        "dim": 16,
+        "value": 1.9
+      },
+      {
+        "dim": 11,
+        "value": 1.89
+      },
+      {
+        "dim": 1,
+        "value": 1.87
+      },
+      {
+        "dim": 17,
+        "value": 1.79
+      }
+    ]
+  }
+]

@@ -1,0 +1,631 @@
+{
+  "gates": [
+    {
+      "id": 1,
+      "title": "Empty input",
+      "reason_prefix": "empty SQL"
+    },
+    {
+      "id": 2,
+      "title": "Must parse as SQL",
+      "reason_prefix": "SQL did not parse"
+    },
+    {
+      "id": 3,
+      "title": "Exactly one statement",
+      "reason_prefix": "expected exactly 1 statement"
+    },
+    {
+      "id": 4,
+      "title": "Must be SELECT or CTE",
+      "reason_prefix": "only SELECT/CTE statements are allowed"
+    },
+    {
+      "id": 5,
+      "title": "No DDL/DML anywhere in the tree",
+      "reason_prefix": "disallowed statement type in query"
+    },
+    {
+      "id": 6,
+      "title": "No SELECT INTO / FOR UPDATE / FOR SHARE",
+      "reason_prefix": [
+        "SELECT ... INTO",
+        "FOR UPDATE/FOR SHARE"
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Function allowlist (default-deny)",
+      "reason_prefix": "disallowed function"
+    },
+    {
+      "id": 8,
+      "title": "No window functions / no || operator",
+      "reason_prefix": [
+        "window functions are not allowed",
+        "concatenation operator is not allowed"
+      ]
+    },
+    {
+      "id": 9,
+      "title": "No nested WITH / WITH RECURSIVE",
+      "reason_prefix": [
+        "nested WITH clauses",
+        "WITH RECURSIVE"
+      ]
+    },
+    {
+      "id": 10,
+      "title": "CTE bodies may only reference approved views or earlier CTEs",
+      "reason_prefix": "unapproved table/view referenced"
+    },
+    {
+      "id": 11,
+      "title": "Main query may only reference approved views or any CTE",
+      "reason_prefix": "unapproved table/view referenced"
+    }
+  ],
+  "cases": [
+    {
+      "sql": "SELECT c.city, COUNT(*) FROM v_customers c JOIN v_orders o ON o.customer_id=c.customer_id GROUP BY c.city",
+      "current_ok": true,
+      "current_reason": "",
+      "current_gate": null,
+      "prefix_ok": true,
+      "prefix_reason": "",
+      "prefix_gate": null,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "WITH recent AS (SELECT * FROM v_orders WHERE order_date > '2025-06-01') SELECT * FROM recent",
+      "current_ok": true,
+      "current_reason": "",
+      "current_gate": null,
+      "prefix_ok": true,
+      "prefix_reason": "",
+      "prefix_gate": null,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "select * from v_customers limit 5",
+      "current_ok": true,
+      "current_reason": "",
+      "current_gate": null,
+      "prefix_ok": true,
+      "prefix_reason": "",
+      "prefix_gate": null,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "SELECT * FROM customers",
+      "current_ok": false,
+      "current_reason": "unapproved table/view referenced: customers",
+      "current_gate": 10,
+      "prefix_ok": false,
+      "prefix_reason": "unapproved table/view referenced: customers",
+      "prefix_gate": 10,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "WITH d AS (DELETE FROM v_orders RETURNING *) SELECT * FROM d",
+      "current_ok": false,
+      "current_reason": "disallowed statement type in query: Delete",
+      "current_gate": 5,
+      "prefix_ok": false,
+      "prefix_reason": "disallowed statement type in query: Delete",
+      "prefix_gate": 5,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "SELECT * INTO new_table FROM v_customers",
+      "current_ok": false,
+      "current_reason": "SELECT ... INTO is disallowed (creates a table)",
+      "current_gate": 6,
+      "prefix_ok": false,
+      "prefix_reason": "SELECT ... INTO is disallowed (creates a table)",
+      "prefix_gate": 6,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "SELECT * FROM v_orders FOR UPDATE",
+      "current_ok": false,
+      "current_reason": "FOR UPDATE/FOR SHARE is disallowed (takes a row lock)",
+      "current_gate": 6,
+      "prefix_ok": false,
+      "prefix_reason": "FOR UPDATE/FOR SHARE is disallowed (takes a row lock)",
+      "prefix_gate": 6,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "SELECT * FROM v_orders FOR SHARE",
+      "current_ok": false,
+      "current_reason": "FOR UPDATE/FOR SHARE is disallowed (takes a row lock)",
+      "current_gate": 6,
+      "prefix_ok": false,
+      "prefix_reason": "FOR UPDATE/FOR SHARE is disallowed (takes a row lock)",
+      "prefix_gate": 6,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "WITH a AS (SELECT * FROM v_customers), b AS (SELECT * FROM a) SELECT * FROM a, b",
+      "current_ok": true,
+      "current_reason": "",
+      "current_gate": null,
+      "prefix_ok": true,
+      "prefix_reason": "",
+      "prefix_gate": null,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "WITH pg_tables AS (SELECT * FROM pg_tables) SELECT * FROM pg_tables, v_customers LIMIT 1",
+      "current_ok": false,
+      "current_reason": "unapproved table/view referenced: pg_tables",
+      "current_gate": 10,
+      "prefix_ok": false,
+      "prefix_reason": "unapproved table/view referenced: pg_tables",
+      "prefix_gate": 10,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "WITH customers AS (SELECT * FROM customers) SELECT * FROM customers, v_customers",
+      "current_ok": false,
+      "current_reason": "unapproved table/view referenced: customers",
+      "current_gate": 10,
+      "prefix_ok": false,
+      "prefix_reason": "unapproved table/view referenced: customers",
+      "prefix_gate": 10,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "WITH a AS (SELECT * FROM pg_roles), pg_roles AS (SELECT 1 AS x FROM v_customers) SELECT * FROM a, pg_roles",
+      "current_ok": false,
+      "current_reason": "unapproved table/view referenced: pg_roles",
+      "current_gate": 10,
+      "prefix_ok": false,
+      "prefix_reason": "unapproved table/view referenced: pg_roles",
+      "prefix_gate": 10,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "SELECT * FROM pg_settings, (WITH pg_settings AS (SELECT 1 AS x FROM v_customers) SELECT x FROM pg_settings) s",
+      "current_ok": false,
+      "current_reason": "nested WITH clauses are not allowed",
+      "current_gate": 9,
+      "prefix_ok": false,
+      "prefix_reason": "nested WITH clauses are not allowed",
+      "prefix_gate": 9,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "SELECT * FROM v_customers LIMIT 5",
+      "current_ok": true,
+      "current_reason": "",
+      "current_gate": null,
+      "prefix_ok": true,
+      "prefix_reason": "",
+      "prefix_gate": null,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "",
+      "current_ok": false,
+      "current_reason": "empty SQL",
+      "current_gate": 1,
+      "prefix_ok": false,
+      "prefix_reason": "empty SQL",
+      "prefix_gate": 1,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "   ",
+      "current_ok": false,
+      "current_reason": "empty SQL",
+      "current_gate": 1,
+      "prefix_ok": false,
+      "prefix_reason": "empty SQL",
+      "prefix_gate": 1,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "SELEKT * FROM FROM WHERE",
+      "current_ok": false,
+      "current_reason": "SQL did not parse: Required keyword: 'expression' missing for <class 'sqlglot.expressions.core.Mul'>. Line 1, Col: 13.\n  SELEKT * \u001b[4mFROM\u001b[0m FROM WHERE",
+      "current_gate": 2,
+      "prefix_ok": false,
+      "prefix_reason": "SQL did not parse: Required keyword: 'expression' missing for <class 'sqlglot.expressions.core.Mul'>. Line 1, Col: 13.\n  SELEKT * \u001b[4mFROM\u001b[0m FROM WHERE",
+      "prefix_gate": 2,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "INSERT INTO v_customers VALUES (1,'a','b','c','d')",
+      "current_ok": false,
+      "current_reason": "only SELECT/CTE statements are allowed, got Insert",
+      "current_gate": 4,
+      "prefix_ok": false,
+      "prefix_reason": "only SELECT/CTE statements are allowed, got Insert",
+      "prefix_gate": 4,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "UPDATE v_customers SET city='X' WHERE customer_id=1",
+      "current_ok": false,
+      "current_reason": "only SELECT/CTE statements are allowed, got Update",
+      "current_gate": 4,
+      "prefix_ok": false,
+      "prefix_reason": "only SELECT/CTE statements are allowed, got Update",
+      "prefix_gate": 4,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "DELETE FROM v_customers",
+      "current_ok": false,
+      "current_reason": "only SELECT/CTE statements are allowed, got Delete",
+      "current_gate": 4,
+      "prefix_ok": false,
+      "prefix_reason": "only SELECT/CTE statements are allowed, got Delete",
+      "prefix_gate": 4,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "DROP TABLE customers",
+      "current_ok": false,
+      "current_reason": "only SELECT/CTE statements are allowed, got Drop",
+      "current_gate": 4,
+      "prefix_ok": false,
+      "prefix_reason": "only SELECT/CTE statements are allowed, got Drop",
+      "prefix_gate": 4,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "ALTER TABLE customers ADD COLUMN x TEXT",
+      "current_ok": false,
+      "current_reason": "only SELECT/CTE statements are allowed, got Alter",
+      "current_gate": 4,
+      "prefix_ok": false,
+      "prefix_reason": "only SELECT/CTE statements are allowed, got Alter",
+      "prefix_gate": 4,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "TRUNCATE TABLE customers",
+      "current_ok": false,
+      "current_reason": "only SELECT/CTE statements are allowed, got TruncateTable",
+      "current_gate": 4,
+      "prefix_ok": false,
+      "prefix_reason": "only SELECT/CTE statements are allowed, got TruncateTable",
+      "prefix_gate": 4,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "PRAGMA table_info(customers)",
+      "current_ok": false,
+      "current_reason": "only SELECT/CTE statements are allowed, got Pragma",
+      "current_gate": 4,
+      "prefix_ok": false,
+      "prefix_reason": "only SELECT/CTE statements are allowed, got Pragma",
+      "prefix_gate": 4,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "SELECT * FROM v_customers; DROP TABLE customers;",
+      "current_ok": false,
+      "current_reason": "expected exactly 1 statement, got 2 (multi-statement rejected)",
+      "current_gate": 3,
+      "prefix_ok": false,
+      "prefix_reason": "expected exactly 1 statement, got 2 (multi-statement rejected)",
+      "prefix_gate": 3,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "SELECT * FROM pg_catalog.pg_tables",
+      "current_ok": false,
+      "current_reason": "unapproved table/view referenced: pg_tables",
+      "current_gate": 10,
+      "prefix_ok": false,
+      "prefix_reason": "unapproved table/view referenced: pg_tables",
+      "prefix_gate": 10,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "SELECT * FROM information_schema.tables",
+      "current_ok": false,
+      "current_reason": "unapproved table/view referenced: tables",
+      "current_gate": 10,
+      "prefix_ok": false,
+      "prefix_reason": "unapproved table/view referenced: tables",
+      "prefix_gate": 10,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "SELECT 1",
+      "current_ok": false,
+      "current_reason": "query references no table (e.g. SELECT 1) - not useful here",
+      "current_gate": null,
+      "prefix_ok": false,
+      "prefix_reason": "query references no table (e.g. SELECT 1) - not useful here",
+      "prefix_gate": null,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "SELECT * FROM v_customers UNION SELECT * FROM customers",
+      "current_ok": false,
+      "current_reason": "unapproved table/view referenced: customers",
+      "current_gate": 10,
+      "prefix_ok": false,
+      "prefix_reason": "unapproved table/view referenced: customers",
+      "prefix_gate": 10,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "SELECT set_config('x', 'y', false)",
+      "current_ok": false,
+      "current_reason": "disallowed function: set_config",
+      "current_gate": 7,
+      "prefix_ok": false,
+      "prefix_reason": "disallowed function: set_config",
+      "prefix_gate": 7,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "SELECT * FROM v_customers WHERE 1 = (SELECT 1 FROM (SELECT set_config('a','b',false)) t)",
+      "current_ok": false,
+      "current_reason": "disallowed function: set_config",
+      "current_gate": 7,
+      "prefix_ok": false,
+      "prefix_reason": "disallowed function: set_config",
+      "prefix_gate": 7,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "SELECT pg_sleep(1)",
+      "current_ok": false,
+      "current_reason": "disallowed function: pg_sleep",
+      "current_gate": 7,
+      "prefix_ok": false,
+      "prefix_reason": "disallowed function: pg_sleep",
+      "prefix_gate": 7,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "SELECT * FROM v_orders, pg_sleep(10)",
+      "current_ok": false,
+      "current_reason": "disallowed function: pg_sleep",
+      "current_gate": 7,
+      "prefix_ok": false,
+      "prefix_reason": "disallowed function: pg_sleep",
+      "prefix_gate": 7,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "SELECT pg_catalog.pg_sleep(1)",
+      "current_ok": false,
+      "current_reason": "disallowed function: pg_sleep",
+      "current_gate": 7,
+      "prefix_ok": false,
+      "prefix_reason": "disallowed function: pg_sleep",
+      "prefix_gate": 7,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "SELECT pg_read_file('/etc/passwd')",
+      "current_ok": false,
+      "current_reason": "disallowed function: pg_read_file",
+      "current_gate": 7,
+      "prefix_ok": false,
+      "prefix_reason": "disallowed function: pg_read_file",
+      "prefix_gate": 7,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "SELECT * FROM dblink('host=x', 'select 1') AS t(a int)",
+      "current_ok": false,
+      "current_reason": "disallowed function: dblink",
+      "current_gate": 7,
+      "prefix_ok": false,
+      "prefix_reason": "disallowed function: dblink",
+      "prefix_gate": 7,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "SELECT lo_import('/etc/passwd')",
+      "current_ok": false,
+      "current_reason": "disallowed function: lo_import",
+      "current_gate": 7,
+      "prefix_ok": false,
+      "prefix_reason": "disallowed function: lo_import",
+      "prefix_gate": 7,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "WITH RECURSIVE r AS (SELECT * FROM v_customers) SELECT * FROM r",
+      "current_ok": false,
+      "current_reason": "WITH RECURSIVE is not allowed",
+      "current_gate": 9,
+      "prefix_ok": false,
+      "prefix_reason": "WITH RECURSIVE is not allowed",
+      "prefix_gate": 9,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "SELECT md5(city) FROM v_customers",
+      "current_ok": false,
+      "current_reason": "disallowed function: MD5",
+      "current_gate": 7,
+      "prefix_ok": false,
+      "prefix_reason": "disallowed function: MD5",
+      "prefix_gate": 7,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "SELECT current_setting('x') FROM v_customers",
+      "current_ok": false,
+      "current_reason": "disallowed function: current_setting",
+      "current_gate": 7,
+      "prefix_ok": false,
+      "prefix_reason": "disallowed function: current_setting",
+      "prefix_gate": 7,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "WITH pg_roles AS (SELECT 1 AS x FROM v_customers) SELECT rolname FROM pg_catalog.pg_roles",
+      "current_ok": false,
+      "current_reason": "unapproved table/view referenced: pg_roles",
+      "current_gate": 10,
+      "prefix_ok": true,
+      "prefix_reason": "",
+      "prefix_gate": null,
+      "is_the_fixed_bypass": true
+    },
+    {
+      "sql": "WITH tables AS (SELECT 1 AS x FROM v_customers) SELECT table_name FROM information_schema.tables",
+      "current_ok": false,
+      "current_reason": "unapproved table/view referenced: tables",
+      "current_gate": 10,
+      "prefix_ok": true,
+      "prefix_reason": "",
+      "prefix_gate": null,
+      "is_the_fixed_bypass": true
+    },
+    {
+      "sql": "WITH pg_roles AS (SELECT 1 AS x FROM v_customers), b AS (SELECT * FROM pg_catalog.pg_roles) SELECT * FROM b",
+      "current_ok": false,
+      "current_reason": "unapproved table/view referenced: pg_roles",
+      "current_gate": 10,
+      "prefix_ok": true,
+      "prefix_reason": "",
+      "prefix_gate": null,
+      "is_the_fixed_bypass": true
+    },
+    {
+      "sql": "WITH pg_stat_activity AS (SELECT 1 AS x FROM v_customers) SELECT usename, query, client_addr FROM pg_catalog.pg_stat_activity",
+      "current_ok": false,
+      "current_reason": "unapproved table/view referenced: pg_stat_activity",
+      "current_gate": 10,
+      "prefix_ok": true,
+      "prefix_reason": "",
+      "prefix_gate": null,
+      "is_the_fixed_bypass": true
+    },
+    {
+      "sql": "WITH customers AS (SELECT * FROM v_customers) SELECT * FROM public.customers",
+      "current_ok": false,
+      "current_reason": "unapproved table/view referenced: customers",
+      "current_gate": 10,
+      "prefix_ok": true,
+      "prefix_reason": "",
+      "prefix_gate": null,
+      "is_the_fixed_bypass": true
+    },
+    {
+      "sql": "SELECT customer_id, COUNT(*) OVER (PARTITION BY customer_id) FROM v_orders",
+      "current_ok": false,
+      "current_reason": "window functions are not allowed",
+      "current_gate": 8,
+      "prefix_ok": false,
+      "prefix_reason": "window functions are not allowed",
+      "prefix_gate": 8,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "SELECT first_name || last_name FROM v_customers",
+      "current_ok": false,
+      "current_reason": "the || concatenation operator is not allowed",
+      "current_gate": null,
+      "prefix_ok": false,
+      "prefix_reason": "the || concatenation operator is not allowed",
+      "prefix_gate": null,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "SELECT ROW_NUMBER() OVER (ORDER BY order_date) FROM v_orders",
+      "current_ok": false,
+      "current_reason": "disallowed function: ROW_NUMBER",
+      "current_gate": 7,
+      "prefix_ok": false,
+      "prefix_reason": "disallowed function: ROW_NUMBER",
+      "prefix_gate": 7,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "SELECT RANK() OVER (ORDER BY order_date) FROM v_orders",
+      "current_ok": false,
+      "current_reason": "disallowed function: RANK",
+      "current_gate": 7,
+      "prefix_ok": false,
+      "prefix_reason": "disallowed function: RANK",
+      "prefix_gate": 7,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "COPY (SELECT * FROM v_customers) TO STDOUT",
+      "current_ok": false,
+      "current_reason": "only SELECT/CTE statements are allowed, got Copy",
+      "current_gate": 4,
+      "prefix_ok": false,
+      "prefix_reason": "only SELECT/CTE statements are allowed, got Copy",
+      "prefix_gate": 4,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "SELECT ARRAY_AGG(order_id) FROM v_orders",
+      "current_ok": false,
+      "current_reason": "disallowed function: ARRAY_AGG",
+      "current_gate": 7,
+      "prefix_ok": false,
+      "prefix_reason": "disallowed function: ARRAY_AGG",
+      "prefix_gate": 7,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "SELECT STRING_AGG(status, ',') FROM v_orders",
+      "current_ok": false,
+      "current_reason": "disallowed function: GROUP_CONCAT",
+      "current_gate": 7,
+      "prefix_ok": false,
+      "prefix_reason": "disallowed function: GROUP_CONCAT",
+      "prefix_gate": 7,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "SELECT JSON_BUILD_OBJECT('id', customer_id) FROM v_customers",
+      "current_ok": false,
+      "current_reason": "disallowed function: JSON_BUILD_OBJECT",
+      "current_gate": 7,
+      "prefix_ok": false,
+      "prefix_reason": "disallowed function: JSON_BUILD_OBJECT",
+      "prefix_gate": 7,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "SELECT TO_JSON(c) FROM v_customers c",
+      "current_ok": false,
+      "current_reason": "disallowed function: TO_JSON",
+      "current_gate": 7,
+      "prefix_ok": false,
+      "prefix_reason": "disallowed function: TO_JSON",
+      "prefix_gate": 7,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "SET statement_timeout = 0",
+      "current_ok": false,
+      "current_reason": "only SELECT/CTE statements are allowed, got Set",
+      "current_gate": 4,
+      "prefix_ok": false,
+      "prefix_reason": "only SELECT/CTE statements are allowed, got Set",
+      "prefix_gate": 4,
+      "is_the_fixed_bypass": false
+    },
+    {
+      "sql": "RESET statement_timeout",
+      "current_ok": false,
+      "current_reason": "only SELECT/CTE statements are allowed, got Command",
+      "current_gate": 4,
+      "prefix_ok": false,
+      "prefix_reason": "only SELECT/CTE statements are allowed, got Command",
+      "prefix_gate": 4,
+      "is_the_fixed_bypass": false
+    }
+  ],
+  "bypass_count": 5
+}
