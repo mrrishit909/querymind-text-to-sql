@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+:root {
+  --obsidian: #0D1015;
+  --silver: #DCE1E6;
+  --cobalt: #416CFF;
+  --lime: #C1F46D;
+  --slate: #25313B;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--obsidian);
+  color: var(--silver);
+  font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+code, pre { font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
