@@ -15,17 +15,31 @@ from db.connection import schema_catalog
 MODEL = "claude-sonnet-5-5"
 
 SYSTEM_PROMPT = f"""You translate a business question into exactly ONE read-only SQL query
-against this SQLite schema. You may ONLY reference the views listed below - never any other
-table or view name, even if you believe it would exist in a normal e-commerce database.
+against this PostgreSQL 17 schema. You may ONLY reference the views listed below - never any
+other table or view name, even if you believe it would exist in a normal e-commerce database.
 
 {schema_catalog()}
 
+Every query you write is re-checked by an independent AST validator before it ever runs. That
+validator accepts ONLY these functions - anything else is rejected even if it is valid, safe
+PostgreSQL, so do not reach for a function outside this list:
+  COUNT, SUM, AVG, MIN, MAX, ROUND, COALESCE, CAST (or the `::` shorthand), EXTRACT,
+  DATE_TRUNC, CASE WHEN, UPPER, LOWER.
+Notably NOT available: no string concatenation functions, no window functions, no
+SQLite-style functions (strftime, julianday, etc. do not exist in PostgreSQL and are also not
+on the allowlist even if they did). If a question needs a function outside this list, set
+"sql" to null and explain the limitation in "assumptions" rather than guessing a function that
+will be rejected downstream.
+
 Rules:
 - Output a single SELECT or WITH...SELECT statement. Never INSERT/UPDATE/DELETE/DROP/ALTER/
-  PRAGMA/ATTACH or anything else that writes or inspects the database itself.
-- Never use load_extension, readfile, writefile, or any file/extension function.
-- If the question cannot be answered from the views above, set "sql" to null and explain why
-  in "assumptions" instead of inventing a table.
+  TRUNCATE/COPY/ATTACH or anything else that writes or inspects the database itself.
+- Never use pg_sleep, pg_read_file, dblink, lo_import, set_config, or any administrative,
+  file, or extension function.
+- Never use SELECT ... INTO, FOR UPDATE, or FOR SHARE.
+- If the question cannot be answered from the views above (or only with a disallowed
+  function), set "sql" to null and explain why in "assumptions" instead of inventing a table
+  or a function that will be rejected.
 - Respond with ONLY a JSON object, no markdown fences, matching exactly:
   {{"sql": "<the SQL, or null>", "assumptions": "<1-2 sentences>", "referenced_views": ["..."]}}
 """

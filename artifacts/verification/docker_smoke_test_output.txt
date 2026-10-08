@@ -1,0 +1,117 @@
+=== 1. down -v (wipe any existing volume, prove fresh-checkout startup) ===
+=== 2. up -d --build ===
+ Image querymind-api Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 538B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 491B done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/python:3.12-slim
+#3 DONE 0.2s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 2B done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 505B done
+#5 DONE 0.0s
+
+#6 [1/6] FROM docker.io/library/python:3.12-slim@sha256:05cda9777409a9c3ffddd94a4c476b79f0769a0b4857f0c7ed9226b6800b0d6f
+#6 resolve docker.io/library/python:3.12-slim@sha256:05cda9777409a9c3ffddd94a4c476b79f0769a0b4857f0c7ed9226b6800b0d6f 0.0s done
+#6 DONE 0.0s
+
+#7 [5/6] COPY api.py llm_sql.py query_executor.py sql_validator.py ./
+#7 CACHED
+
+#8 [4/6] RUN pip install --no-cache-dir -r requirements.txt
+#8 CACHED
+
+#9 [3/6] COPY requirements.txt .
+#9 CACHED
+
+#10 [2/6] WORKDIR /app
+#10 CACHED
+
+#11 [6/6] COPY db/ db/
+#11 CACHED
+
+#12 exporting to image
+#12 exporting layers done
+#12 exporting manifest sha256:a682ef8292a0fe8110105ba95daef56d8dc8f19a5daf263c5d0459880179c233 done
+#12 exporting config sha256:2d77ba4ee81dba86edd60e99942c25a969bc74256cf8ef0fb1418bd20a43139a done
+#12 exporting attestation manifest sha256:8df10f87c320c60c6eaf29e056ee4f3c7f1e887557c743cc970f829ffa723a36 done
+#12 exporting manifest list sha256:d215702ea084cd4d5d57877ec69aeefd081fd0fcf38ba6b4d5d30c4dfafd3a1d done
+#12 naming to docker.io/library/querymind-api:latest done
+#12 unpacking to docker.io/library/querymind-api:latest done
+#12 DONE 0.0s
+
+#13 resolving provenance for metadata file
+#13 DONE 0.0s
+ Image querymind-api Built 
+ Network querymind_default Creating 
+ Volume querymind_pgdata Creating 
+ Volume querymind_pgdata Creating 
+ Network querymind_default Creating 
+ Volume querymind_pgdata Created 
+ Volume querymind_pgdata Created 
+ Network querymind_default Created 
+ Network querymind_default Created 
+ Container querymind-postgres-1 Creating 
+ Container querymind-redis-1 Creating 
+ Container querymind-redis-1 Created 
+ Container querymind-postgres-1 Created 
+ Container querymind-api-1 Creating 
+ Container querymind-api-1 Created 
+ Container querymind-postgres-1 Starting 
+ Container querymind-redis-1 Starting 
+ Container querymind-postgres-1 Started 
+ Container querymind-redis-1 Started 
+ Container querymind-postgres-1 Waiting 
+ Container querymind-redis-1 Waiting 
+ Container querymind-postgres-1 Healthy 
+ Container querymind-redis-1 Healthy 
+ Container querymind-api-1 Starting 
+ Container querymind-api-1 Started 
+=== 3. wait for postgres and redis to report healthy (api has no healthcheck) ===
+postgres and redis healthy after 1s
+=== 3b. wait for the api service itself to accept connections (no healthcheck defined on it) ===
+api responding after 2s
+=== 4. seed ===
+Seeded querymind: 300 customers, 1200 orders, 2961 order_items
+=== 5. curl /health ===
+{"status":"ok","llm_configured":false}
+=== 6. curl -N /ask/stream (SSE) ===
+No ANTHROPIC_API_KEY configured - confirming the endpoint exists and streams the expected shape without a real LLM call
+event: generating_sql
+data: {"stage": "generating_sql"}
+
+event: error
+data: {"stage": "generating_sql", "message": "\"Could not resolve authentication method. Expected one of api_key, auth_token, or credentials to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted\""}
+=== 7. docker compose ps (confirm all healthy/running) ===
+NAME                   IMAGE           COMMAND                  SERVICE    CREATED         STATUS                   PORTS
+querymind-api-1        querymind-api   "uvicorn api:app --h…"   api        8 seconds ago   Up 2 seconds             127.0.0.1:8020->8000/tcp
+querymind-postgres-1   postgres:17     "docker-entrypoint.s…"   postgres   8 seconds ago   Up 8 seconds (healthy)   127.0.0.1:55901->5432/tcp
+querymind-redis-1      redis:7         "docker-entrypoint.s…"   redis      8 seconds ago   Up 8 seconds (healthy)   127.0.0.1:63791->6379/tcp
+=== smoke test result ===
+SMOKE TEST PASSED
+--- cleanup: docker compose down -v ---
+ Container querymind-api-1 Stopping 
+ Container querymind-api-1 Stopped 
+ Container querymind-api-1 Removing 
+ Container querymind-api-1 Removed 
+ Container querymind-redis-1 Stopping 
+ Container querymind-postgres-1 Stopping 
+ Container querymind-postgres-1 Stopped 
+ Container querymind-postgres-1 Removing 
+ Container querymind-postgres-1 Removed 
+ Container querymind-redis-1 Stopped 
+ Container querymind-redis-1 Removing 
+ Container querymind-redis-1 Removed 
+ Volume querymind_pgdata Removing 
+ Network querymind_default Removing 
+ Volume querymind_pgdata Removed 
+ Network querymind_default Removed 

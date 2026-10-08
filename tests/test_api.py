@@ -28,6 +28,9 @@ def test_schema_lists_only_approved_views():
     }
 
 
+@pytest.mark.skipif(
+    not os.environ.get("DATABASE_URL"), reason="requires live Postgres (docker compose up -d) via DATABASE_URL"
+)
 def test_execute_valid_select():
     r = client.post("/execute", json={"sql": "SELECT * FROM v_customers LIMIT 3"})
     assert r.status_code == 200

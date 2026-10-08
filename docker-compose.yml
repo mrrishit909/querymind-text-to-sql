@@ -1,0 +1,54 @@
+# Local Docker Compose only - nothing here is deployed to any real cloud host.
+# One command: `docker compose up -d --build` (see README.md).
+name: querymind
+
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: querymind_admin_local_only
+      POSTGRES_DB: querymind
+    volumes:
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./db/roles.sql:/docker-entrypoint-initdb.d/02_roles.sql:ro
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:55901:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d querymind"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7
+    ports:
+      - "127.0.0.1:63791:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # Reader role only - least privilege, see db/roles.sql. The app never
+      # connects as the postgres superuser.
+      DATABASE_URL: postgresql://querymind_reader:querymind_reader_local_only@postgres:5432/querymind
+      ADMIN_DATABASE_URL: postgresql://postgres:querymind_admin_local_only@postgres:5432/querymind
+      REDIS_URL: redis://redis:6379/0
+    ports:
+      - "127.0.0.1:8020:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  pgdata:

@@ -1,0 +1,10 @@
+'RESET statement_timeout' contains unsupported syntax. Falling back to parsing as a 'Command'.
+=== Can querymind_reader override its own session statement_timeout on a raw connection? ===
+initial statement_timeout: ('3s',)
+after SET statement_timeout=0: ('0',)
+pg_sleep(4) completed without cancellation in 4.01s -- timeout override WORKED
+
+=== Does validate_sql() reject a bare SET statement? ===
+[rejected] 'SET statement_timeout = 0' -> only SELECT/CTE statements are allowed, got Set
+[rejected] 'SET statement_timeout TO 0' -> only SELECT/CTE statements are allowed, got Set
+[rejected] 'RESET statement_timeout' -> only SELECT/CTE statements are allowed, got Command

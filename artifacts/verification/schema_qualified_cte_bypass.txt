@@ -1,0 +1,15 @@
+[ACCEPTED] cte_alias_shadow_schema_qualified_pg_roles
+    sql: WITH pg_roles AS (SELECT 1 AS x FROM v_customers) SELECT rolname FROM pg_catalog.pg_roles
+    regenerated: WITH pg_roles AS (SELECT 1 AS x FROM v_customers) SELECT rolname FROM pg_catalog.pg_roles
+[ACCEPTED] cte_alias_shadow_schema_qualified_info_schema_tables
+    sql: WITH tables AS (SELECT 1 AS x FROM v_customers) SELECT table_name FROM information_schema.tables
+    regenerated: WITH tables AS (SELECT 1 AS x FROM v_customers) SELECT table_name FROM information_schema.tables
+[ACCEPTED] cte_body_variant_schema_qualified
+    sql: WITH pg_roles AS (SELECT 1 AS x FROM v_customers), b AS (SELECT * FROM pg_catalog.pg_roles) SELECT * FROM b
+    regenerated: WITH pg_roles AS (SELECT 1 AS x FROM v_customers), b AS (SELECT * FROM pg_catalog.pg_roles) SELECT * FROM b
+[ACCEPTED] cte_alias_shadow_pg_stat_activity
+    sql: WITH pg_stat_activity AS (SELECT 1 AS x FROM v_customers) SELECT query FROM pg_catalog.pg_stat_activity
+    regenerated: WITH pg_stat_activity AS (SELECT 1 AS x FROM v_customers) SELECT query FROM pg_catalog.pg_stat_activity
+[ACCEPTED] control_public_schema_qualified_view
+    sql: WITH customers AS (SELECT * FROM v_customers) SELECT * FROM public.customers
+    regenerated: WITH customers AS (SELECT * FROM v_customers) SELECT * FROM public.customers
